@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>赛博塔罗 | 没有方向时的方向</title>
+    <!-- 引入免费商用字体：Cinzel Decorative (西幻神秘/标题), Ma Shan Zheng (焚火体/毛笔), Italianno (花体英文), Noto Serif SC (宋体正文) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700&family=Italianno&family=Ma+Shan+Zheng&family=Noto+Serif+SC:wght@400;700&display=swap" rel="stylesheet">
+    <style>
+        /* 赛博西幻复古色系 */
+        :root {
+            --bg-color: #0A0B10; /* 深空黑背景 */
+            --card-bg: #14151E; /* 卡牌底色 */
+            --text-main: #E0D8C8; /* 复古羊皮纸白 */
+            --text-sub: #8E8B82;
+            --primary: #C5A880; /* 古铜金 */
+            --cyber-glow: #6A5ACD; /* 赛博紫光 */
+            --border-color: #3A3B4C;
+            --option-bg: #1C1D29;
+            --option-hover: #262838;
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px 15px;
+            line-height: 1.6;
+            /* 赛博网格背景 */
+            background-image: 
+                linear-gradient(rgba(106, 90, 205, 0.05) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(106, 90, 205, 0.05) 1px, transparent 1px);
+            background-size: 20px 20px;
+            font-family: "Noto Serif SC", serif;
+        }
+
+        /* 塔罗卡牌造型容器 */
+        .app-container {
+            width: 100%;
+            max-width: 380px;
+            background-color: var(--card-bg);
+            border-radius: 12px;
+            /* 赛博发光+金色边框 */
+            border: 1px solid var(--primary);
+            box-shadow: 0 0 20px rgba(106, 90, 205, 0.3), inset 0 0 30px rgba(197, 168, 128, 0.05);
+            padding: 30px 20px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        /* 卡牌内部神秘装饰线 */
+        .app-container::before {
+            content: '';
+            position: absolute;
+            top: 8px; left: 8px; right: 8px; bottom: 8px;
+            border: 1px solid rgba(197, 168, 128, 0.2);
+            border-radius: 8px;
+            pointer-events: none;
+        }
+
+        /* 顶部标题 */
+        .top-bar {
+            text-align: center;
+            font-size: 13px;
+            color: var(--primary);
+            margin-bottom: 25px;
+            letter-spacing: 2px;
+            font-weight: bold;
+            text-shadow: 0 0 8px rgba(197, 168, 128, 0.5);
+        }
+
+        /* 页面切换控制 */
+        .page { display: none; }
+        .page.active { display: block; animation: fadeIn 0.6s ease; }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: scale(0.98); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        /* 封面页 */
+        .tarot-symbol {
+            text-align: center;
+            font-size: 40px;
+            color: var(--primary);
+            margin-bottom: 10px;
+            opacity: 0.8;
+        }
+        /* 焚火体标题 */
+        .cover-title {
+            font-family: "Ma Shan Zheng", cursive;
+            font-size: 32px;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #F4EBD0;
+            text-shadow: 0 0 10px rgba(197, 168, 128, 0.6);
+            line-height: 1.3;
+        }
+        /* 导语 + 花体英文 */
+        .cover-subtitle {
+            font-size: 13px;
+            color: var(--text-sub);
+            text-align: center;
+            margin-bottom: 35px;
+        }
+        .english-flourish {
+            font-family: "Italianno", cursive;
+            font-size: 26px;
+            color: var(--primary);
+            display: block;
+            margin-bottom: 8px;
+            letter-spacing: 1px;
+        }
+        /* 西幻神秘字体按钮 */
+        .start-btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            background-color: transparent;
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            border-radius: 4px;
+            font-family: "Cinzel Decorative", serif; /* 西幻神秘英文字体 */
+            font-size: 20px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            letter-spacing: 2px;
+            box-shadow: 0 0 10px rgba(197, 168, 128, 0.1) inset;
+        }
+        .start-btn:active, .start-btn:hover {
+            background-color: rgba(197, 168, 128, 0.1);
+            box-shadow: 0 0 15px rgba(197, 168, 128, 0.4);
+        }
+
+        /* 答题页 */
+        .progress-bar {
+            width: 100%;
+            height: 2px;
+            background-color: var(--border-color);
+            margin-bottom: 25px;
+        }
+        .progress-inner {
+            height: 100%;
+            background-color: var(--cyber-glow);
+            width: 0%;
+            transition: width 0.3s ease;
+            box-shadow: 0 0 8px var(--cyber-glow);
+        }
+        .question-text {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 25px;
+            min-height: 50px;
+            color: #F4EBD0;
+        }
+        .options-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        .option-item {
+            background-color: var(--option-bg);
+            padding: 14px 16px;
+            border-radius: 4px;
+            font-size: 14px;
+            color: var(--text-main);
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+        .option-item:active, .option-item.selected {
+            background-color: var(--option-hover);
+            border-color: var(--primary);
+            box-shadow: 0 0 10px rgba(197, 168, 128, 0.2);
+        }
+        .next-btn {
+            display: none;
+            width: 100%;
+            padding: 14px;
+            background-color: var(--option-bg);
+            color: var(--primary);
+            border: 1px solid var(--primary);
+            text-align: center;
+            font-size: 15px;
+            margin-top: 25px;
+            cursor: pointer;
+            letter-spacing: 2px;
+        }
+        .next-btn:active {
+            background-color: var(--option-hover);
+        }
+
+        /* 新增：跳过按钮样式 */
+        .skip-btn {
+            display: none; /* 默认隐藏 */
+            width: 100%;
+            padding: 12px;
+            background-color: transparent;
+            color: var(--text-sub);
+            border: none;
+            text-align: center;
+            font-size: 13px;
+            margin-top: 15px;
+            cursor: pointer;
+            text-decoration: underline;
+            text-underline-offset: 4px;
+            transition: color 0.3s;
+        }
+        .skip-btn:active {
+            color: var(--primary);
+        }
+
+        /* 结果页 */
+        .result-label {
+            font-size: 12px;
+            color: var(--text-sub);
+            text-align: center;
+            margin-bottom: 5px;
+            letter-spacing: 2px;
+        }
+        .result-city {
+            font-size: 22px;
+            font-weight: bold;
+            color: var(--primary);
+            text-align: center;
+            margin-bottom: 25px;
+            text-shadow: 0 0 10px rgba(197, 168, 128, 0.4);
+        }
+        .result-card {
+            background-color: rgba(255,255,255,0.02);
+            border-left: 2px solid var(--cyber-glow);
+            padding: 15px;
+            font-size: 14px;
+            color: var(--text-main);
+            margin-bottom: 30px;
+            line-height: 1.8;
+        }
+        .result-card p { margin-bottom: 12px; }
+        .result-card p:last-child {
+            margin-bottom: 0;
+            color: #B8A99A;
+            text-align: right;
+            font-style: normal; /* 取消斜体 */
+        }
+        .result-card strong {
+            color: var(--primary);
+            font-weight: bold;
+        }
+        .restart-btn {
+            display: block;
+            width: 100%;
+            padding: 12px;
+            background-color: transparent;
+            color: var(--text-sub);
+            text-align: center;
+            font-size: 13px;
+            border: 1px solid var(--border-color);
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+
+<div class="app-container">
+    <div class="top-bar">赛博塔罗 | 没有方向时的方向</div>
+
+    <!-- 封面页 -->
+    <div id="page-cover" class="page active">
+        <div class="tarot-symbol">✧ ✦ ✧</div>
+        <div class="cover-title">当你陷入<br>虚无主义时</div>
+        <div class="cover-subtitle">
+            <span class="english-flourish">Do not fear, the soul is seeking a new anchor.</span>
+            不要害怕，这只是灵魂在寻找新锚点。<br>回答以下问题，让无形的小手为你指引。
+        </div>
+        <button class="start-btn" onclick="startQuiz()">Accept Guidance</button>
+    </div>
+
+    <!-- 答题页 -->
+    <div id="page-quiz" class="page">
+        <div class="progress-bar">
+            <div class="progress-inner" id="progress"></div>
+        </div>
+        <div class="question-text" id="question-text">题目加载中...</div>
+        <div class="options-list" id="options-list">
+            <!-- 选项通过JS生成 -->
+        </div>
+        <button class="next-btn" id="next-btn" onclick="nextQuestion()">下一张牌</button>
+        
+        <!-- 新增的跳过按钮 -->
+        <button class="skip-btn" id="skip-btn" onclick="skipQuestion()">无法选择，直接跳过</button>
+    </div>
+
+    <!-- 结果页 -->
+    <div id="page-result" class="page">
+        <div class="result-label">无形的小手为你指引了</div>
+        <div class="result-city" id="result-title">方向名</div>
+        <div class="result-card" id="result-desc">
+            <!-- 结果文案 -->
+        </div>
+        <button class="restart-btn" onclick="restartQuiz()">重新洗牌</button>
+    </div>
+</div>
+
+<script>
+    // 题库数据 (结合年轻人生活化场景优化)
+    const questions = [
+        { q: "1. 周末的午后，你更倾向于？", opts: ["去热闹的集市观察人类", "待在家里刷手机打游戏", "放音乐享受自由时间", "去户外散步或跑步"] },
+        { q: "2. 面对一个全新的领域（比如陶艺、编程），你通常？", opts: ["三分钟热度，体验一下就跑", "必须买齐所有装备才开始", "先查阅大量资料，谨慎入坑", "直接动手尝试，边做边学"] },
+        { q: "3. 你如何看待“完美主义”？", opts: ["是我的枷锁，常常让我停滞不前", "是我追求卓越的动力", "尽力就好，允许瑕疵存在", "看心情，有时候摆烂有时候死磕"] },
+        { q: "4. 你更喜欢哪种“动”的状态？", opts: ["运动过程中的暴汗", "漫无目的的散步", "和朋友一起聊天喝奶茶", "在舞池里随音乐摇摆"] },
+        { q: "5. 你更喜欢哪种“静”的状态？", opts: ["沉浸在虚构的小说/电影世界", "戴着耳机听音乐做家务", "写日记或随便涂鸦", "发呆并什么都不做"] },
+        { q: "6. 当你感到压力大时，你的第一反应是？", opts: ["找人倾诉，需要发泄负能量", "把自己关起来，拒绝交流", "通过消耗体力来转移注意力", "机械性地刷短视频或吃零食"] },
+        { q: "7. 对于自己的要求，你通常是？", opts: ["极其严苛，达不到目标就会自责", "随遇而安，过得去就行", "有自己的底线，但不强求结果", "经常在极度自信和极度自卑间横跳"] },
+        { q: "8. 如果现在给你一整天完全空闲的时间，你会？", opts: ["一口气看完想看的剧", "手机静音并睡一整天", "学做一道菜或甜品", "离开家在户外度过一天"] }, /* 修复了这里缺失的逗号 */
+        { q: "9. 你更偏好哪种类型的创作？", opts: ["文字类（写作、写诗、剧本）", "视觉类（画画、摄影、剪辑）", "实体类（做皮具、拼乐高、木工）", "数字类（做网页、写代码、做app）"] },
+        { q: "10. 在人群中，你通常是？", opts: ["主动找话题的社牛", "安静倾听的观察者", "看氛围，遇到同频的人会滔滔不绝", "随时准备逃离的社恐"] },
+        { q: "11. 你对“失败”的看法是？", opts: ["害怕失败，尽量避免", "只是数据反馈，并不在意", "很丢脸，不想让别人知道", "无所谓，反正人生就是一场游戏"] },
+        { q: "12. 你更容易被哪种事物打动？", opts: ["宏大的史诗和交响乐", "细腻的电影", "大自然的落日", "可爱的小动物"] },
+        { q: "13. 面对一成不变的日常，你会？", opts: ["感到安心，喜欢规律", "感到窒息，想立刻打破", "偶尔觉得无聊，但懒得改变", "每天变着法子给自己找新鲜感"] },
+        { q: "14. 如果送你一件物品，你更想要？", opts: ["一把做工精良的复古匕首", "一本泛黄的魔法书", "一双可以走很远路的靴子", "一个能装下各种奇怪石头的口袋"] },
+        { q: "15. 虚无感来袭时，你觉得自己最缺的是？", opts: ["一种热烈燃烧的激情", "一个能让我专注的爱好", "深度的灵魂交流", "安稳的睡眠和好胃口"] },
+        { q: "16. 【选答】你的星座属于哪一象？", opts: ["土象（摩羯、金牛、处女）", "火象（白羊、狮子、射手）", "水象（巨蟹、天蝎、双鱼）", "风象（水瓶、双子、天秤）"] },
+        { q: "17. 【选答】你的MBTI属于哪个颜色组？", opts: ["绿色组（理想主义者：INFP/ENFP/INFJ/ENFJ）", "蓝色组（守护者：ISTJ/ISFJ/ESTJ/ESFJ）", "紫色组（分析家：INTJ/INTP/ENTJ/ENTP）", "黄色组（探险家：ISTP/ISFP/ESTP/ESFP）"] }
+    ];
+
+    // 爱好方向结果数据
+    const hobbiesData = [
+        {
+            name: "静 · 星象罗盘（占星/塔罗/天文观测）",
+            desc: "<strong>✨ 状态亮点：</strong> 你拥有敏锐的直觉，能在混乱中看到事物背后的隐秘联系。你对未知充满敬畏，是现实世界里的“预言家”。<br><br><strong>🧭 迈开第一步：</strong> 买一副基础塔罗牌或观星指南，不为别人占卜，只用来解读自己当下的困惑。<br><br><strong>⚠️ 小缺点：</strong> 容易沉溺于宿命论，把选择权交给“水逆”或“星星”。<br><br>“如果星辰注定，那过程里的眼泪和晚风，就是你的自由意志。”"
+        },
+        {
+            name: "静 · 古籍修补师（手工/阅读/古典文学）",
+            desc: "<strong>✨ 状态亮点：</strong> 你有着超越同龄人的耐心与沉稳。你渴望在快时代里抓住一些缓慢、确定的东西，有很强的精神洁癖。<br><br><strong>🧭 迈开第一步：</strong> 买一沓宣纸或羊皮纸，试着抄写一首诗，或者用胶水修补一本家里翻旧的书。<br><br><strong>⚠️ 小缺点：</strong> 对现实世界的粗糙感到不耐烦，容易被贴上“老古董”的标签。<br><br>“修补裂缝的过程，本质上也是在缝补那个破碎的自己。”"
+        },
+        {
+            name: "静 · 炉火调香师（香薰/精油/小众体验）",
+            desc: "<strong>✨ 状态亮点：</strong> 你对气味、温度和氛围极度敏感，是个细腻的感官动物。你懂得如何用微小的美好来治愈日常。<br><br><strong>🧭 迈开第一步：</strong> 去一次线下的调香体验课，或者买几款不同香型的精油小样，调配属于自己的味道。<br><br><strong>⚠️ 小缺点：</strong> 容易被消费主义裹挟，买一堆昂贵但用不完的瓶瓶罐罐。<br><br>“当世界变得太吵闹时，就躲进一滴琥珀里呼吸吧。”"
+        },
+        {
+            name: "静 · 灵魂画手（水彩/涂鸦/灵感收集）",
+            desc: "<strong>✨ 状态亮点：</strong> 你的内心有一座巨大的城堡，你不擅长用语言表达，但色彩和线条是你最好的出口。<br><br><strong>🧭 迈开第一步：</strong> 不要买厚重的教程书了，随手拿张废纸和水笔，画出你今天吃的一顿早餐。<br><br><strong>⚠️ 小缺点：</strong> 完美主义作祟时，容易因为画得不满意而撕纸摔笔。<br><br>“别管透视和比例，画得像不像不重要，画得爽最重要。”"
+        },
+        {
+            name: "动 · 荒野游侠（徒步/露营/自然接触）",
+            desc: "<strong>✨ 状态亮点：</strong> 你本质上是只野生动物，高楼大厦困不住你。你需要在风里、泥土里、落日下找回生命力，大自然是你最好的充能站。<br><br><strong>🧭 迈开第一步：</strong> 这个周末，带上水壶，去最近的公园或近郊山林走两万步，甚至不用带任何专业装备。<br><br><strong>⚠️ 小缺点：</strong> 容易对城市日常产生生理性厌倦，一旦回到工位就觉得灵魂被抽干。<br><br>“去走走吧，让脚底的泥巴比朋友圈的滤镜更能治愈你。”"
+        },
+        {
+            name: "动 · 飞盘骑士（飞盘/骑行/轻度竞技）",
+            desc: "<strong>✨ 状态亮点：</strong> 你充满活力，有着强烈的规则感和团队协作精神。你喜欢出点汗、赢点小比赛带来的多巴胺快乐。<br><br><strong>🧭 迈开第一步：</strong> 扫一辆共享单车，沿着城市绿道骑一个小时，什么都不想，只感受风。<br><br><strong>⚠️ 小缺点：</strong> 容易三分钟热度，装备买了一堆，最后全在吃灰。<br><br>“赢不赢无所谓，反正出了一身汗，感觉自己是个活人。”"
+        },
+        {
+            name: "动 · 铸铁锻造师（力量训练/健身房/拳击）",
+            desc: "<strong>✨ 状态亮点：</strong> 你是个狠人，喜欢用绝对的执行力去对抗虚无。你明白身体的强大能直接反哺内心的力量。<br><br><strong>🧭 迈开第一步：</strong> 不去想练出马甲线的事，今天就做二十个俯卧撑或者深蹲，感受肌肉酸痛的真实感。<br><br><strong>⚠️ 小缺点：</strong> 一旦陷入身材焦虑，容易把自己逼得太紧。<br><br>“当大脑停机时，让肌肉去思考。”"
+        },
+        {
+            name: "动 · 街头寻宝者（探店/摄影/城市漫游）",
+            desc: "<strong>✨ 状态亮点：</strong> 你有极强的好奇心和敏锐的观察力。你不喜欢循规蹈矩，总是在寻找“B面”的城市生活。<br><br><strong>🧭 迈开第一步：</strong> 放下目的地，随机坐上一辆公交车，在第七个站台下车，用手机拍下十张照片。<br><br><strong>⚠️ 小缺点：</strong> 容易被新鲜感绑架，难以在一段关系或一件事上长久停留。<br><br>“走到哪算哪，找不到宝藏，就当是个无聊的下午好了。”"
+        }
+    ];
+
+    let currentQuestionIndex = 0;
+    let selectedOption = null;
+
+    function startQuiz() {
+        document.getElementById('page-cover').classList.remove('active');
+        document.getElementById('page-quiz').classList.add('active');
+        currentQuestionIndex = 0;
+        renderQuestion();
+    }
+
+    function renderQuestion() {
+        const q = questions[currentQuestionIndex];
+        document.getElementById('question-text').innerText = q.q;
+        
+        const progress = ((currentQuestionIndex + 1) / questions.length) * 100;
+        document.getElementById('progress').style.width = progress + '%';
+
+        const optionsList = document.getElementById('options-list');
+        optionsList.innerHTML = '';
+        selectedOption = null;
+        document.getElementById('next-btn').style.display = 'none';
+
+        // 新增逻辑：如果是第16题或第17题（索引为15或16），显示跳过按钮
+        if (currentQuestionIndex === 15 || currentQuestionIndex === 16) {
+            document.getElementById('skip-btn').style.display = 'block';
+        } else {
+            document.getElementById('skip-btn').style.display = 'none';
+        }
+
+        q.opts.forEach((opt, index) => {
+            const div = document.createElement('div');
+            div.className = 'option-item';
+            div.innerText = opt;
+            div.onclick = () => selectOption(div, index);
+            optionsList.appendChild(div);
+        });
+    }
+
+    function selectOption(element, index) {
+        const items = document.querySelectorAll('.option-item');
+        items.forEach(item => item.classList.remove('selected'));
+        element.classList.add('selected');
+        selectedOption = index;
+        document.getElementById('next-btn').style.display = 'block';
+        
+        // 新增逻辑：选完后隐藏跳过按钮
+        if (document.getElementById('skip-btn')) {
+            document.getElementById('skip-btn').style.display = 'none';
+        }
+    }
+
+    // 新增：跳过题目的函数
+    function skipQuestion() {
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            renderQuestion();
+        } else {
+            calculateResult(); // 如果是最后一题跳过，直接出结果
+        }
+    }
+
+    function nextQuestion() {
+        if (selectedOption === null) return;
+
+        if (currentQuestionIndex < questions.length - 1) {
+            currentQuestionIndex++;
+            renderQuestion();
+        } else {
+            calculateResult();
+        }
+    }
+
+    function calculateResult() {
+        const randomHobby = hobbiesData[Math.floor(Math.random() * hobbiesData.length)];
+        
+        document.getElementById('page-quiz').classList.remove('active');
+        document.getElementById('page-result').classList.add('active');
+        
+        document.getElementById('result-title').innerText = randomHobby.name;
+        document.getElementById('result-desc').innerHTML = randomHobby.desc;
+    }
+
+    function restartQuiz() {
+        document.getElementById('page-result').classList.remove('active');
+        document.getElementById('page-cover').classList.add('active');
+        currentQuestionIndex = 0;
+        selectedOption = null;
+    }
+</script>
+
+</body>
+</html>
